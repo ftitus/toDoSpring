@@ -1,88 +1,75 @@
-import React, { useState, useEffect } from "react";
-import "./App.css"; // Import the CSS file for styling
+import React, { useState } from "react";
+import "./App.css";
 
 function App() {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
-
-  useEffect(() => {
-    fetch("/api/todo")
-      .then((response) => response.json())
-      .then((data) => setTodos(data));
-  }, []);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const handleInputChange = (event) => {
     setNewTodo(event.target.value);
   };
 
-  const handleSubmit = (event) => {
+  const handleFormSubmit = (event) => {
     event.preventDefault();
-    if (!newTodo.trim()) return;
-
-    const todoItem = { title: newTodo, completed: false };
-
-    fetch("/api/todo", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(todoItem),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Error adding todo");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setTodos((prevTodos) => [...prevTodos, data]); // Use functional update to ensure previous state is updated correctly
-        setNewTodo("");
-      })
-      .catch((error) => console.error(error));
+    if (newTodo.trim() !== "") {
+      setTodos([...todos, { text: newTodo, completed: false }]);
+      setNewTodo("");
+    }
   };
 
-  const handleComplete = (todoId) => {
-    const updatedTodos = todos.map((todo) => {
-      if (todo.id === todoId) {
-        return { ...todo, completed: !todo.completed };
-      }
-      return todo;
-    });
-
+  const handleTodoDelete = (index) => {
+    const updatedTodos = [...todos];
+    updatedTodos.splice(index, 1);
     setTodos(updatedTodos);
   };
 
-  const handleRemove = (todoId) => {
-    fetch(`/api/todo/${todoId}`, {
-      method: "DELETE",
-    })
-      .then(() => {
-        const updatedTodos = todos.filter((todo) => todo.id !== todoId);
-        setTodos(updatedTodos);
-      })
-      .catch((error) => console.error("Error deleting todo:", error));
+  const handleTodoToggleComplete = (index) => {
+    const updatedTodos = [...todos];
+    updatedTodos[index].completed = !updatedTodos[index].completed;
+    setTodos(updatedTodos);
+  };
+
+  const handleToggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
   };
 
   return (
-    <div className="app-container">
-      <h1>To-Do List</h1>
-      <form onSubmit={handleSubmit}>
+    <div className={`app ${isDarkMode ? "dark-mode" : ""}`}>
+      <h1>Todo List</h1>
+      <form onSubmit={handleFormSubmit}>
         <input
           type="text"
           value={newTodo}
           onChange={handleInputChange}
-          placeholder="Add a new task"
+          placeholder="Enter a new todo"
         />
         <button type="submit">Add</button>
       </form>
       <ul>
-        {todos.map((todo) => (
-          <li key={todo.id} className={todo.completed ? "completed" : ""}>
-            <span onClick={() => handleComplete(todo.id)}>{todo.title}</span>
-            <button onClick={() => handleRemove(todo.id)}>Remove</button>
+        {todos.map((todo, index) => (
+          <li key={index} className={todo.completed ? "completed" : ""}>
+            {todo.text}
+            <div>
+              <button
+                className="complete-button"
+                onClick={() => handleTodoToggleComplete(index)}
+              >
+                {todo.completed ? "Undo" : "Complete"}
+              </button>
+              <button
+                className="delete-button"
+                onClick={() => handleTodoDelete(index)}
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
+      <button className="toggle-mode-button" onClick={handleToggleDarkMode}>
+        {isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+      </button>
     </div>
   );
 }
