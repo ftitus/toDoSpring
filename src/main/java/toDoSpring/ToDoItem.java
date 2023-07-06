@@ -14,5 +14,5 @@ public class TodoItem {
     private String title;
     private boolean completed;
 
-    // Constructors, getters, and setters
+
 }

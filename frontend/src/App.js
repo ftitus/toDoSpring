@@ -28,11 +28,17 @@ function App() {
       },
       body: JSON.stringify(todoItem),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error adding todo");
+        }
+        return response.json();
+      })
       .then((data) => {
-        setTodos([...todos, data]);
+        setTodos((prevTodos) => [...prevTodos, data]); // Use functional update to ensure previous state is updated correctly
         setNewTodo("");
-      });
+      })
+      .catch((error) => console.error(error));
   };
 
   const handleComplete = (todoId) => {
